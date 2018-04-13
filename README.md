@@ -1,8 +1,10 @@
 ## How to extract an official MariaDB mysqldump and mysql binary from a Docker container that will work on our cflinuxfs2 container image
 
-docker pull mariadb
-docker run --name some-mariadb -e MYSQL_ROOT_PASSWORD=password -d mariadb -it bash
-docker cp 29a9060d5387:/usr/bin/mysqldump .
+```
+$ docker pull mariadb
+$ docker run --name some-mariadb -e MYSQL_ROOT_PASSWORD=password -d mariadb -it bash
+$ docker cp 29a9060d5387:/usr/bin/mysqldump .
+```
 
 cf push si-dumper -b binary_buildpack -c "./do-nothing.sh" --health-check-type none
 
