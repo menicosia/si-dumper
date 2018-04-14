@@ -1,4 +1,4 @@
-#!/bin/bash -xu
+#!/bin/bash -ux
 
 ## Relies on environment variables:
 # VCAP_SERVICES
@@ -30,19 +30,33 @@ HOSTNAME=$(echo $P_MYSQL | jq -r .credentials.hostname)
 DATABASE=$(echo $P_MYSQL | jq -r .credentials.name)
 INSTANCE=$(echo $P_MYSQL | jq -r .name)
 
-dateStamp=`date +"%Y%m%d-%H%M"`
 dateValue=`date -R`
-tmpDir="/var/tmp"
 contentType="text/plain"
-accept="application/json"
+fileList="/var/tmp/fileList.$$"
 
 listRequest="GET\n\n${contentType}\n${dateValue}\n/${s3Bucket}/"
 
 signature1=`echo -en ${listRequest} | openssl sha1 -hmac ${s3SecretKey} -binary | base64`
 
-curl -i -X GET \
+curl -o ${fileList} -s -i -X GET \
           -H "Host: ${s3Bucket}.s3.amazonaws.com" \
           -H "Content-Type: ${contentType}" \
           -H "Date: ${dateValue}" \
           -H "Authorization: AWS ${s3AccessKey}:${signature1}" \
           https://${s3Bucket}.s3.amazonaws.com/
+
+ARTIFACT=$(cat ${fileList} |./find-files-xml.pl | sort | tail -1)
+
+### PART 2: Restore the backup artifact to our Service Instance
+
+dateValue=`date -R`
+artifactRequest="GET\n\n${contentType}\n${dateValue}\n/${s3Bucket}/${ARTIFACT}"
+
+signature2=`echo -en ${artifactRequest} | openssl sha1 -hmac ${s3SecretKey} -binary | base64`
+
+curl -o /var/tmp/${ARTIFACT} -s -X GET \
+          -H "Host: ${s3Bucket}.s3.amazonaws.com" \
+          -H "Content-Type: ${contentType}" \
+          -H "Date: ${dateValue}" \
+          -H "Authorization: AWS ${s3AccessKey}:${signature2}" \
+          https://${s3Bucket}.s3.amazonaws.com/${ARTIFACT}
