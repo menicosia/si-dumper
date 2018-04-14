@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -u
 
 ## Relies on environment variables:
 # VCAP_SERVICES
