@@ -45,8 +45,8 @@ $ cd si-dumper
 $ docker pull mariadb:10.1
 $ docker run --name some-mariadb -e MYSQL_ROOT_PASSWORD=password -d mariadb -it bash
 $ docker ps -a
-[find the id of your MariaDB image]
-$ docker cp 29a9060d5387:/usr/bin/mysqldump .
+[find the id of your MariaDB container]
+$ docker cp YOUR-CONTAINER-ID:/usr/bin/mysqldump .
 ```
 
 ### Step 2: Create backup artifacts
