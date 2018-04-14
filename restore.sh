@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -xu
 
 ## Relies on environment variables:
 # VCAP_SERVICES
@@ -33,23 +33,16 @@ INSTANCE=$(echo $P_MYSQL | jq -r .name)
 dateStamp=`date +"%Y%m%d-%H%M"`
 dateValue=`date -R`
 tmpDir="/var/tmp"
-objectName="output-${dateStamp}.sql"
-filePath="${tmpDir}/${objectName}"
-resource="/${s3Bucket}/${objectName}"
 contentType="text/plain"
-listRequest="GET\
-/\
-\
-host:${s3Bucket}.s3.amazonaws.com\
-x-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\
-x-amz-date:${dateValue}"
+accept="application/json"
+
+listRequest="GET\n\n${contentType}\n${dateValue}\n/${s3Bucket}/"
+
 signature1=`echo -en ${listRequest} | openssl sha1 -hmac ${s3SecretKey} -binary | base64`
-# contentType="text/plain"
-# stringToSign="PUT\n\n${contentType}\n${dateValue}\n${resource}"
 
 curl -i -X GET \
           -H "Host: ${s3Bucket}.s3.amazonaws.com" \
+          -H "Content-Type: ${contentType}" \
           -H "Date: ${dateValue}" \
-          -H "x-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" \
-          -H "Authorization: AWS ${s3AccessKey}:${signature}" \
+          -H "Authorization: AWS ${s3AccessKey}:${signature1}" \
           https://${s3Bucket}.s3.amazonaws.com/
